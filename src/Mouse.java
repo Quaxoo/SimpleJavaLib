@@ -8,6 +8,12 @@ public class Mouse implements MouseListener, MouseMotionListener, MouseWheelList
     private final Coordinate position = new Coordinate();
     private final Set<Integer> buttonsDown = new HashSet<>();
     private int scroll = 0;
+    private int xOffset,yOffset;
+    private Window window;
+
+    Mouse(Window window){
+        this.window = window;
+    }
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -16,12 +22,15 @@ public class Mouse implements MouseListener, MouseMotionListener, MouseWheelList
 
     @Override
     public void mousePressed(MouseEvent e) {
+        xOffset = e.getX();
+        yOffset = e.getY();
         buttonsDown.add(e.getButton());
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
         buttonsDown.remove(e.getButton());
+        window.setMoveable(false);
     }
 
     @Override
@@ -37,6 +46,11 @@ public class Mouse implements MouseListener, MouseMotionListener, MouseWheelList
     @Override
     public void mouseDragged(MouseEvent e) {
         mouseMoved(e);
+        if (window.isMoveable()) {
+            int newX = e.getXOnScreen() - xOffset;
+            int newY = e.getYOnScreen() - yOffset;
+            window.setLocation(newX, newY);
+        }
     }
 
     @Override
@@ -71,5 +85,13 @@ public class Mouse implements MouseListener, MouseMotionListener, MouseWheelList
 
     public void clearScroll() {
         scroll = 0;
+    }
+
+    public boolean isAnyButtonDown(){
+        return !buttonsDown.isEmpty();
+    }
+
+    public Set<Integer> getPressedButtons(){
+        return buttonsDown;
     }
 }

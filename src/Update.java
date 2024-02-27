@@ -12,7 +12,7 @@ public class Update extends Loop {
 
     public static void update(){
         for (GraphicObject go: objects){
-            go.update();
+            go.refresh();
         }
     }
 

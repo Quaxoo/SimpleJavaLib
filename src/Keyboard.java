@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class Keyboard implements KeyEventDispatcher, KeyListener {
 
-    private final Set<Integer> pressedKeys = new HashSet<>();
+    public final Set<Integer> pressedKeys = new HashSet<>();
 
     @Override
     public void keyTyped(KeyEvent e) {
@@ -40,5 +40,13 @@ public class Keyboard implements KeyEventDispatcher, KeyListener {
             keyReleased(e);
         }
         return false;
+    }
+
+    public boolean isAnyKeyDown(){
+       return !pressedKeys.isEmpty();
+    }
+
+    public Set<Integer> getPressedKeys(){
+        return pressedKeys;
     }
 }

@@ -51,8 +51,8 @@ public class Coordinate {
         return this;
     }
 
-    public int getDistance(Coordinate k){
-        return (int)Math.sqrt( Math.pow( k.getX()-getX() ,2) + Math.pow( k.getY() - getY() ,2) );
+    public double getDistance(Coordinate k){
+        return Math.sqrt( Math.pow( k.getX()-getX() ,2) + Math.pow( k.getY() - getY() ,2) );
     }
 
     public boolean equals(Coordinate k){
