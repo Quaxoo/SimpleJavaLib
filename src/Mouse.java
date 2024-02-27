@@ -5,9 +5,9 @@ import java.util.Set;
 
 public class Mouse implements MouseListener, MouseMotionListener, MouseWheelListener {
 
-    private static final Coordinate position = new Coordinate();
-    private static final Set<Integer> buttonsDown = new HashSet<>();
-    private static int scroll = 0;
+    private final Coordinate position = new Coordinate();
+    private final Set<Integer> buttonsDown = new HashSet<>();
+    private int scroll = 0;
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -49,27 +49,27 @@ public class Mouse implements MouseListener, MouseMotionListener, MouseWheelList
         scroll += e.getScrollAmount() * e.getWheelRotation();
     }
 
-    public static Coordinate get() {
+    public Coordinate get() {
         return position;
     }
 
-    public static boolean isMouseDown(int button) {
+    public boolean isMouseDown(int button) {
         return buttonsDown.contains(button);
     }
 
-    public static void clear() {
+    public void clear() {
         buttonsDown.clear();
     }
 
-    public static int getScroll() {
+    public int getScroll() {
         return scroll;
     }
 
-    public static void setScroll(int s) {
+    public void setScroll(int s) {
         scroll = s;
     }
 
-    public static void clearScroll() {
+    public void clearScroll() {
         scroll = 0;
     }
 }

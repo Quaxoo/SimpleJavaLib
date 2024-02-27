@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.util.ArrayList;
@@ -12,6 +13,11 @@ public class Window extends JFrame {
     private int vsync;
     private JPanel panel;
 
+    private Render renderThread;
+    private Update updateThread;
+    private Mouse mouse;
+    private Keyboard keyboard;
+
     public Window(String title){
 
         super(title);
@@ -22,16 +28,20 @@ public class Window extends JFrame {
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new Keyboard());
         setLocationRelativeTo(null);
-        setResizable(true);
+        setResizable(false);
 
         setupListener();
         setupPanel();
+        setupThreads();
 
         getContentPane().setBackground(new Color(44,44,44));
 
         setVisible(true);
         vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
         windows.add(this);
+
+        updateThread.start();
+        renderThread.start();
     }
 
     public Window(String title, int width, int height, boolean rezisable){
@@ -48,12 +58,16 @@ public class Window extends JFrame {
 
         setupListener();
         setupPanel();
+        setupThreads();
 
         getContentPane().setBackground(new Color(44,44,44));
 
         setVisible(true);
         vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
         windows.add(this);
+
+        updateThread.start();
+        renderThread.start();
     }
 
     private void setupListener(){
@@ -66,23 +80,40 @@ public class Window extends JFrame {
             @Override
             public void windowLostFocus(WindowEvent e) {
                 isFocused = false;
-                Mouse.clear();
-                Keyboard.clear();
+                mouse.clear();
+                keyboard.clear();
 
             }
         });
     }
 
+    public void repaint(){
+        panel.repaint();
+    }
+
     private void setupPanel(){
-        panel = new JPanel();
+        panel = new JPanel(){
+            @Override
+            public void paintComponent(Graphics g){
+                super.paintComponent(g);
+                renderThread.renderObjects(g);
+            }
+        };
         panel.setOpaque(false);
         setLayout(new BorderLayout());
-        Mouse mouse = new Mouse();
-        panel.addKeyListener(new Keyboard());
+        mouse = new Mouse();
+        keyboard = new Keyboard();
+        panel.addKeyListener(keyboard);
         panel.addMouseMotionListener(mouse);
         panel.addMouseListener(mouse);
         panel.addMouseWheelListener(mouse);
         getContentPane().add(panel);
+    }
+
+    private void setupThreads(){
+        vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
+        renderThread = new Render(this);
+        updateThread = new Update(this);
     }
 
     public static Window getDefault(){
@@ -94,7 +125,15 @@ public class Window extends JFrame {
         }
     }
 
-    public void allowResize(boolean rezisable){
-        setResizable(rezisable);
+    public int getFramerate(){
+        return vsync;
     }
+
+    public void add(GraphicObject graphicObject){
+        renderThread.add(graphicObject);
+        updateThread.add(graphicObject);
+    }
+
+
+
 }

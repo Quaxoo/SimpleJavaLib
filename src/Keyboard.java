@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class Keyboard implements KeyEventDispatcher, KeyListener {
 
-    private static final Set<Integer> pressedKeys = new HashSet<>();
+    private final Set<Integer> pressedKeys = new HashSet<>();
 
     @Override
     public void keyTyped(KeyEvent e) {
@@ -24,11 +24,11 @@ public class Keyboard implements KeyEventDispatcher, KeyListener {
 
     }
 
-    public static boolean isKeyDown(int key){
+    public boolean isKeyDown(int key){
         return pressedKeys.contains(key);
     }
 
-    public static void clear(){
+    public void clear(){
         pressedKeys.clear();
     }
 
