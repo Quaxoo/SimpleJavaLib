@@ -7,10 +7,12 @@ public abstract class GraphicObject {
     private Coordinate center;
     private final ArrayList<Sprite> sprites = new ArrayList<>();
     private Sprite currentSprite;
-    private Window window;
+    protected Window window;
     private boolean entered = false;
     private boolean mouseDown = false;
     private boolean enableClick = true;
+    private boolean enableScroll = false;
+
     public GraphicObject(int x, int y, String spritePath){
         center = new Coordinate(x, y);
         addSprite(spritePath);
@@ -30,11 +32,11 @@ public abstract class GraphicObject {
 
     protected abstract void update();
     public void refresh(){
-        if (!entered && currentSprite.contains(window.getMouse(), position)){
+        if (!entered && currentSprite.contains(window.getMouse(), position, getScroll())){
             enableClick = !window.isAnyButtonDown();
             onMouseEntered();
             entered = true;
-        }else if(entered && !currentSprite.contains(window.getMouse(), position)){
+        }else if(entered && !currentSprite.contains(window.getMouse(), position, getScroll())){
             onMouseLeft();
             entered = false;
         }
@@ -67,7 +69,7 @@ public abstract class GraphicObject {
     protected abstract void onMouseClicked();
 
     protected void draw(Graphics g){
-        g.drawImage(currentSprite.getImage(), center.getX() - currentSprite.getWidth()/2, center.getY() - currentSprite.getHeight()/2, currentSprite.getWidth(), currentSprite.getHeight(), null);
+        g.drawImage(currentSprite.getImage(), center.getX() - currentSprite.getWidth()/2, center.getY() - currentSprite.getHeight()/2 - getScroll(), currentSprite.getWidth(), currentSprite.getHeight(), null);
     }
 
     protected void addSprite(Sprite sprite){
@@ -114,4 +116,12 @@ public abstract class GraphicObject {
             s.setBoundsSimple(simple);
         }
     }
+
+    protected int getScroll(){
+        return enableScroll ? window.getScroll() : 0;
+    }
+    public void isScrollable(boolean scrollable){
+        enableScroll = scrollable;
+    }
+
 }

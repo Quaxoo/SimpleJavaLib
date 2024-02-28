@@ -2,6 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,16 +13,19 @@ import java.util.Set;
 public class Window extends JFrame {
     private static final ArrayList<Window> windows = new ArrayList<>();
     private static int defaultWindow = 0;
-
     private boolean isFocused = false;
     private int vsync;
     private JPanel panel;
-
+    private Dimension size;
     private Render renderThread;
     private Update updateThread;
     private Mouse mouse;
     private Keyboard keyboard;
     private boolean moveable = false;
+    private Font font;
+    private ArrayList<String> console = new ArrayList<>();
+
+    private int scrollMax = 100, scrollMin = -20;
 
     public Window(String title){
 
@@ -36,8 +43,9 @@ public class Window extends JFrame {
         keyboard = new Keyboard();
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyboard);
 
+        size = Toolkit.getDefaultToolkit().getScreenSize();
         setupListener();
-        setupPanel(Toolkit.getDefaultToolkit().getScreenSize());
+        setupPanel();
         setupThreads();
 
         setBackground(new Color(0,0,0,0));
@@ -68,8 +76,9 @@ public class Window extends JFrame {
         keyboard = new Keyboard();
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyboard);
 
+        size = getSize();
         setupListener();
-        setupPanel(getSize());
+        setupPanel();
         setupThreads();
 
         setBackground(new Color(0,0,0,0));
@@ -106,21 +115,30 @@ public class Window extends JFrame {
         panel.repaint();
     }
 
-    private void setupPanel(Dimension size){
+    private void setupPanel(){
+        loadFont();
         panel = new JPanel(){
             @Override
             public void paintComponent(Graphics g){
                 super.paintComponent(g);
-                Graphics2D graphics = (Graphics2D) g.create();
-                graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                graphics.setColor(getForeground());
-                graphics.setColor(new Color(44,44,44));
-                graphics.fillRoundRect(0, 0,  size.width- 1, size.height - 1, 30, 30);
-                graphics.dispose();
-                renderThread.renderObjects(g);
+
+                BufferedImage content = new BufferedImage(size.width-12,size.height-12, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2D = content.createGraphics();
+                g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2D.setBackground(new Color(0,0,0,0));
+                g2D.setColor(new Color(44,44,44));
+                g2D.fillRoundRect(0, 0,  size.width - 12, size.height - 12, 30, 30);
+                renderThread.renderObjects(g2D);
+                g2D.dispose();
+                g2D = (Graphics2D) g.create();
+                g2D.setColor(new Color(90, 90, 90));
+                g2D.fillRoundRect(0, 0,  size.width, size.height, 30, 30);
+                g2D.drawImage(content, 6,6,null);
+                g2D.dispose();
+                writeConsole(g);
             }
         };
-        panel.setOpaque(false);
+        panel.setOpaque(true);
         setLayout(new BorderLayout());
         panel.addKeyListener(keyboard);
         panel.addMouseMotionListener(mouse);
@@ -194,4 +212,57 @@ public class Window extends JFrame {
         this.moveable = moveable;
     }
 
+    public void loadFont(){
+        try {
+            File fontFile = new File(System.getProperty("user.dir") + "\\src\\" +"Monocraft.ttf");
+            InputStream is = new FileInputStream(fontFile);
+            font = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(16f);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(font);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void println(String text){
+        console.add(text);
+    }
+    public void println(int text){
+        console.add(String.valueOf(text));
+    }
+    public void println(double text){
+        console.add(String.valueOf(text));
+    }
+    private void writeConsole(Graphics g){
+        g.setFont(font);
+        g.setColor(Color.WHITE);
+        for (int i = 0; i < console.size(); i++){
+            FontMetrics fontMetrics = g.getFontMetrics();
+            int y = size.height - (console.size()-i)*(fontMetrics.getHeight()+5) - 10;
+            if(y > 20){
+                g.drawString(console.get(i), 30, y);
+            }else{
+                console.remove(i);
+            }
+        }
+    }
+
+    public int getScroll(){
+        return mouse.getScroll();
+    }
+
+    public void update() {
+        updateThread.update();
+    }
+
+    public int checkScroll(int scrollDelta){
+        if(getScroll() + scrollDelta > scrollMax){
+            return scrollMax;
+        }
+        if(getScroll() + scrollDelta < scrollMin){
+            return scrollMin;
+        }
+        return getScroll() + scrollDelta;
+    }
 }

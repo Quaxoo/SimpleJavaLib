@@ -6,11 +6,12 @@ public class Update extends Loop {
     private Window window;
 
     public Update(Window window){
-        super(Update::update, 200);
+        super(window::update, 200);
         this.window = window;
     }
 
-    public static void update(){
+    public void update(){
+
         for (GraphicObject go: objects){
             go.refresh();
         }

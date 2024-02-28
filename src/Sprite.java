@@ -128,11 +128,11 @@ public class Sprite {
         return false;
     }
 
-    public boolean contains(Coordinate point, Coordinate pos){
+    public boolean contains(Coordinate point, Coordinate pos, int scroll){
         if (simpleBoundsOn){
-            return simpleBounds.contains(new Point(point.getX() - pos.getX(), point.getY() - pos.getY()));
+            return simpleBounds.contains(new Point(point.getX() - pos.getX(), point.getY() - pos.getY() + scroll));
         }else {
-            return bounds.contains(new Point(point.getX() - pos.getX(), point.getY() - pos.getY()));
+            return bounds.contains(new Point(point.getX() - pos.getX(), point.getY() - pos.getY() + scroll));
         }
     }
 

@@ -60,7 +60,7 @@ public class Mouse implements MouseListener, MouseMotionListener, MouseWheelList
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        scroll += e.getScrollAmount() * e.getWheelRotation();
+        scroll = window.checkScroll(e.getScrollAmount() * e.getWheelRotation() * 5);
     }
 
     public Coordinate get() {

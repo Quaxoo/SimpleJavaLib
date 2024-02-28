@@ -32,13 +32,13 @@ public class Loop extends Thread{
                 tasks++;
             }
 
-//            if (lastPrint + 1000 <= System.currentTimeMillis()){
-//                lastPrint = System.currentTimeMillis();
-//                if (tasks < PS){
-//                    System.out.println(tasks + " (" + (tasks-PS) + ")");
-//                }
-//                tasks = 0;
-//            }
+            if (lastPrint + 1000 <= System.currentTimeMillis()){
+                lastPrint = System.currentTimeMillis();
+               if (tasks < PS){
+                    System.out.println(tasks + " (" + (tasks-PS) + ")");
+                }
+                tasks = 0;
+            }
         }
     }
 

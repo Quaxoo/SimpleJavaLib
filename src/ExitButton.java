@@ -9,7 +9,7 @@ public class ExitButton extends GraphicObject{
 
         Dimension windowSize = window.getSize();
 
-        moveTo(windowSize.width - getWidth()/2 - windowSize.width/100, getHeight() / 2 + windowSize.height/100);
+        moveTo(windowSize.width - getWidth()/2 - windowSize.width/50, getHeight() / 2 + windowSize.height/75);
         setBoundsSimple(true);
     }
 
