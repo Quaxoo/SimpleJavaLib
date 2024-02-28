@@ -13,12 +13,15 @@ public class Render extends Loop {
     }
     public void renderObjects(Graphics g){
         for (GraphicObject go: objects){
-            go.draw(g);
+            go.draw(g, true);
         }
     }
 
     public void add(GraphicObject graphicObject){
         objects.add(graphicObject);
+    }
+    public void remove(GraphicObject graphicObject){
+        objects.remove(graphicObject);
     }
     public void restart(){
         restartLoop();

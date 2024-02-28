@@ -2,14 +2,10 @@ import java.awt.*;
 import java.io.File;
 
 public class ExitButton extends GraphicObject{
-    private Window window;
     public ExitButton(Window window) {
         super(0,0, new Sprite(System.getProperty("user.dir") + "\\src\\" +"exitbutton.png", 0.8f));
         addSprite(new Sprite(System.getProperty("user.dir") + "\\src\\" +"exitbuttonHovered.png", 0.8f));
-
-        Dimension windowSize = window.getSize();
-
-        moveTo(windowSize.width - getWidth()/2 - windowSize.width/50, getHeight() / 2 + windowSize.height/75);
+        moveTo(window.getWidth() - getWidth()/2 - 3 * window.getOutline(), getHeight() / 2 + window.getOutline());
         setBoundsSimple(true);
     }
 
@@ -44,7 +40,9 @@ public class ExitButton extends GraphicObject{
     }
 
     @Override
-    protected void onMouseClicked() {
-        System.exit(0);
+    protected void onMouseClicked(int button) {
+        if (button == 1){
+            System.exit(0);
+        }
     }
 }

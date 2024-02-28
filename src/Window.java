@@ -24,72 +24,56 @@ public class Window extends JFrame {
     private boolean moveable = false;
     private Font font;
     private ArrayList<String> console = new ArrayList<>();
-
+    ExitConsoleButton exitConsoleButton;
+    private int consoleState = 0;
     private int scrollMax = 100, scrollMin = -20;
+    private int outline = 6;
+
+    private Color background = new Color(44,44,44);
+    private Color border = new Color(90,90,90);
+    private Color consoleBackground = new Color(15,15,15, (int) (255 * 0.9f));
+    private Color opaque = new Color(0,0,0,0);
+    private int arc = 30;
+    private int closedConsoleHeight = 25;
 
     public Window(String title){
 
         super(title);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setUndecorated(true);
-
-
-        setLocationRelativeTo(null);
-        setResizable(false);
-
-        mouse = new Mouse(this);
-        keyboard = new Keyboard();
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyboard);
-
         size = Toolkit.getDefaultToolkit().getScreenSize();
-        setupListener();
-        setupPanel();
-        setupThreads();
-
-        setBackground(new Color(0,0,0,0));
-
-        setVisible(true);
-        vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
-        windows.add(this);
-
-        updateThread.start();
-        renderThread.start();
-
-        new ExitButton(this);
-        new MoveButton(this);
+        setResizable(false);
+        setUp();
     }
 
     public Window(String title, int width, int height, boolean rezisable){
 
         super(title);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         setSize(width,height);
-        setUndecorated(true);
-
-        setLocationRelativeTo(null);
+        size = getSize();
         setResizable(rezisable);
+        setUp();
+    }
 
+    public void setUp(){
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setUndecorated(true);
+        setLocationRelativeTo(null);
         mouse = new Mouse(this);
         keyboard = new Keyboard();
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyboard);
 
-        size = getSize();
         setupListener();
         setupPanel();
-        setupThreads();
 
-        setBackground(new Color(0,0,0,0));
-
+        vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
+        renderThread = new Render(this);
+        updateThread = new Update(this);
+        setBackground(opaque);
         setVisible(true);
         vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
         windows.add(this);
-
         updateThread.start();
         renderThread.start();
-
         new ExitButton(this);
         new MoveButton(this);
     }
@@ -122,20 +106,33 @@ public class Window extends JFrame {
             public void paintComponent(Graphics g){
                 super.paintComponent(g);
 
-                BufferedImage content = new BufferedImage(size.width-12,size.height-12, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage content = new BufferedImage(size.width - 2 * outline,size.height - 2 * outline, BufferedImage.TYPE_INT_ARGB);
+
                 Graphics2D g2D = content.createGraphics();
+
                 g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2D.setBackground(new Color(0,0,0,0));
-                g2D.setColor(new Color(44,44,44));
-                g2D.fillRoundRect(0, 0,  size.width - 12, size.height - 12, 30, 30);
+                g2D.setBackground(opaque);
+                g2D.setColor(background);
+                g2D.fillRoundRect(0, 0,  size.width - 2 * outline, size.height - 2 * outline, arc, arc);
+
                 renderThread.renderObjects(g2D);
                 g2D.dispose();
+
                 g2D = (Graphics2D) g.create();
-                g2D.setColor(new Color(90, 90, 90));
-                g2D.fillRoundRect(0, 0,  size.width, size.height, 30, 30);
-                g2D.drawImage(content, 6,6,null);
+                g2D.setColor(border);
+                g2D.fillRoundRect(0, 0,  size.width, size.height, arc, arc);
+                g2D.drawImage(content, outline,outline,null);
                 g2D.dispose();
-                writeConsole(g);
+                if (doesConsoleExist()){
+                    g.setColor(consoleBackground);
+                    if (isConsoleOpen()){
+                        g.fillRoundRect(outline, size.height - outline - getConsoleHeight(),  size.width - 2*outline, getConsoleHeight(), arc, arc);
+                        writeConsole(g);
+                    }else {
+                        g.fillRoundRect(outline, size.height - outline - closedConsoleHeight,  size.width - 2*outline, closedConsoleHeight, arc, arc);
+                    }
+                    exitConsoleButton.draw(g, false);
+                }
             }
         };
         panel.setOpaque(true);
@@ -144,15 +141,9 @@ public class Window extends JFrame {
         panel.addMouseMotionListener(mouse);
         panel.addMouseListener(mouse);
         panel.addMouseWheelListener(mouse);
-        panel.setBackground(new Color(0,0,0,0));
+        panel.setBackground(opaque);
         getContentPane().add(panel);
         panel.requestFocus();
-    }
-
-    private void setupThreads(){
-        vsync = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getRefreshRate();
-        renderThread = new Render(this);
-        updateThread = new Update(this);
     }
 
     public static Window getDefault(){
@@ -175,6 +166,12 @@ public class Window extends JFrame {
     public void add(GraphicObject graphicObject){
         renderThread.add(graphicObject);
         updateThread.add(graphicObject);
+    }
+    public void removeRender(GraphicObject graphicObject){
+        renderThread.remove(graphicObject);
+    }
+    public void addRender(GraphicObject graphicObject){
+        renderThread.add(graphicObject);
     }
 
     public boolean isMouseDown(int button){
@@ -216,7 +213,7 @@ public class Window extends JFrame {
         try {
             File fontFile = new File(System.getProperty("user.dir") + "\\src\\" +"Monocraft.ttf");
             InputStream is = new FileInputStream(fontFile);
-            font = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(16f);
+            font = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(18f);
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(font);
 
@@ -226,22 +223,26 @@ public class Window extends JFrame {
     }
 
     public void println(String text){
+        if (!doesConsoleExist()){
+            exitConsoleButton = new ExitConsoleButton();
+            setConsole(2);
+        }
         console.add(text);
     }
     public void println(int text){
-        console.add(String.valueOf(text));
+        println(String.valueOf(text));
     }
     public void println(double text){
-        console.add(String.valueOf(text));
+        println(String.valueOf(text));
     }
     private void writeConsole(Graphics g){
         g.setFont(font);
         g.setColor(Color.WHITE);
         for (int i = 0; i < console.size(); i++){
             FontMetrics fontMetrics = g.getFontMetrics();
-            int y = size.height - (console.size()-i)*(fontMetrics.getHeight()+5) - 10;
-            if(y > 20){
-                g.drawString(console.get(i), 30, y);
+            int y = size.height - (console.size()-i) * (fontMetrics.getHeight() + 5);
+            if(y > getHeight() - (getConsoleHeight() - fontMetrics.getHeight())){
+                g.drawString(console.get(i), 5 * outline, y);
             }else{
                 console.remove(i);
             }
@@ -264,5 +265,34 @@ public class Window extends JFrame {
             return scrollMin;
         }
         return getScroll() + scrollDelta;
+    }
+
+    public boolean isConsoleOpen(){
+        return consoleState == 2;
+    }
+    public boolean doesConsoleExist(){
+        return consoleState != 0;
+    }
+    public void setConsole(int state){
+        consoleState = state;
+    }
+
+    public int getConsoleHeight(){
+        return size.height/3;
+    }
+
+    public int getWidth(){
+        return size.width;
+    }
+    public int getHeight(){
+        return size.height;
+    }
+
+    public int getOutline(){
+        return outline;
+    }
+
+    public int getClosedConsoleHeight() {
+        return closedConsoleHeight;
     }
 }

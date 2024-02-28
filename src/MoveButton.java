@@ -2,14 +2,13 @@ import java.awt.*;
 import java.io.File;
 
 public class MoveButton extends GraphicObject{
-    private Window window;
+    private final Window window;
     public MoveButton(Window window) {
         super(0,0, new Sprite(System.getProperty("user.dir") + "\\src\\" +"movebutton.png" ));
         addSprite(new Sprite(System.getProperty("user.dir") + "\\src\\" + "movebuttonHovered.png"));
 
-        Dimension windowSize = window.getSize();
+        moveTo(window.getWidth() - 2 * getWidth() - 3 * window.getOutline(), getHeight() / 2 + window.getOutline()/2);
 
-        moveTo(windowSize.width - getWidth()*2 - windowSize.width/200, getHeight() / 2 + windowSize.height/100);
         setBoundsSimple(true);
         this.window = window;
     }
@@ -36,7 +35,7 @@ public class MoveButton extends GraphicObject{
 
     @Override
     protected void onMouseDown() {
-        window.setMoveable(true);
+        window.setMoveable(window.getPressedButtons().contains(1));
     }
 
     @Override
@@ -45,7 +44,7 @@ public class MoveButton extends GraphicObject{
     }
 
     @Override
-    protected void onMouseClicked() {
+    protected void onMouseClicked(int button) {
 
     }
 }

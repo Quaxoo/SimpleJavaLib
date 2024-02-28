@@ -38,7 +38,6 @@ public class TestObject extends GraphicObject{
 
     @Override
     protected void onMouseDown() {
-
     }
 
     @Override
@@ -47,13 +46,8 @@ public class TestObject extends GraphicObject{
     }
 
     @Override
-    protected void onMouseClicked() {
-        if (isButtonDown(1)){
-            System.out.println(1);
-        }
-        if (isButtonDown(2)){
-            System.out.println(2);
-        }
+    protected void onMouseClicked(int button) {
+        window.println(button);
     }
 
 }

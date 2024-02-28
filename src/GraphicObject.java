@@ -1,17 +1,18 @@
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Set;
 
 public abstract class GraphicObject {
-    private Coordinate position;
-    private Coordinate center;
-    private final ArrayList<Sprite> sprites = new ArrayList<>();
-    private Sprite currentSprite;
+    protected Coordinate position;
+    protected Coordinate center;
+    protected final ArrayList<Sprite> sprites = new ArrayList<>();
+    protected Sprite currentSprite;
     protected Window window;
-    private boolean entered = false;
-    private boolean mouseDown = false;
-    private boolean enableClick = true;
-    private boolean enableScroll = false;
+    protected boolean entered = false;
+    protected boolean mouseDown = false;
+    protected boolean enableClick = true;
+    protected boolean enableScroll = false;
+    protected boolean doRender = true;
+    protected int mouseButton;
 
     public GraphicObject(int x, int y, String spritePath){
         center = new Coordinate(x, y);
@@ -47,16 +48,16 @@ public abstract class GraphicObject {
             onKeyDown();
         }
         if (entered && window.isAnyButtonDown() && enableClick){
-            if (!mouseDown){
-                mouseDown = true;
-            }
+            mouseDown = true;
             onMouseDown();
+            mouseButton = window.getPressedButtons().toArray()[0] != null ? (int) window.getPressedButtons().toArray()[0] : -1 ;
         }else if(mouseDown){
             mouseDown = false;
             onMouseUp();
             if(entered){
-                onMouseClicked();
+                onMouseClicked(mouseButton);
             }
+            mouseButton = 0;
         }
         update();
     }
@@ -66,9 +67,10 @@ public abstract class GraphicObject {
     protected abstract void onKeyDown();
     protected abstract void onMouseDown();
     protected abstract void onMouseUp();
-    protected abstract void onMouseClicked();
+    protected abstract void onMouseClicked(int button);
 
-    protected void draw(Graphics g){
+    protected void draw(Graphics g, boolean threadRender){
+        if(isRendered() == threadRender)
         g.drawImage(currentSprite.getImage(), center.getX() - currentSprite.getWidth()/2, center.getY() - currentSprite.getHeight()/2 - getScroll(), currentSprite.getWidth(), currentSprite.getHeight(), null);
     }
 
@@ -122,6 +124,18 @@ public abstract class GraphicObject {
     }
     public void isScrollable(boolean scrollable){
         enableScroll = scrollable;
+    }
+
+    public void setDoRender(boolean render){
+        if(render){
+            window.removeRender(this);
+        }else{
+            window.addRender(this);
+        }
+        doRender = render;
+    }
+    public boolean isRendered(){
+        return doRender;
     }
 
 }
