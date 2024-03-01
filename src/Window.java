@@ -25,8 +25,9 @@ public class Window extends JFrame {
     private Font font;
     private ArrayList<String> console = new ArrayList<>();
     ExitConsoleButton exitConsoleButton;
+    ScrollButton scrollButton;
     private int consoleState = 0;
-    private int scrollMax = 100, scrollMin = -20;
+    private int scrollMax, scrollMin;
     private int outline = 6;
 
     private Color background = new Color(44,44,44);
@@ -123,6 +124,16 @@ public class Window extends JFrame {
                 g2D.fillRoundRect(0, 0,  size.width, size.height, arc, arc);
                 g2D.drawImage(content, outline,outline,null);
                 g2D.dispose();
+                if (scrollEnabled() && getDefault() != null){
+                    if(scrollButton == null){
+                        scrollButton = new ScrollButton();
+                    }
+                    g.setColor(consoleBackground);
+                    g.fillRoundRect(getWidth() - 5*outline, 8*outline, 2*outline, getHeight() - 12*outline,10,10);
+                    g.setColor(border);
+                    g.fillRoundRect(getWidth() - 5*outline, 8*outline - (int)(((getHeight() - 18*outline + 1) / (double)(scrollMin-scrollMax)) * (getScroll() - scrollMin)), 2*outline, 6*outline,10,10);
+                    //scrollButton.draw(g, false);
+                }
                 if (doesConsoleExist()){
                     g.setColor(consoleBackground);
                     if (isConsoleOpen()){
@@ -147,7 +158,7 @@ public class Window extends JFrame {
     }
 
     public static Window getDefault(){
-        return windows.get(defaultWindow);
+        return !windows.isEmpty() ? windows.get(defaultWindow) : null;
     }
     public static void setDefault(int newDefaultWindow){
         if(newDefaultWindow >= 0 && newDefaultWindow < windows.size()){
@@ -294,5 +305,16 @@ public class Window extends JFrame {
 
     public int getClosedConsoleHeight() {
         return closedConsoleHeight;
+    }
+
+    public void setMaxScroll(int scrollMax){
+        this.scrollMax  = scrollMax;
+    }
+    public void setMinScroll(int scrollMin){
+        this.scrollMin  = scrollMin;
+    }
+
+    public boolean scrollEnabled(){
+        return scrollMin != 0 || scrollMax != 0;
     }
 }
